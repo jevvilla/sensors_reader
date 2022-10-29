@@ -45,8 +45,8 @@ function evaluateLogFile(filePath: string): void {
   });
 
   reader.on('close', () => {
-    const result = Object.entries(sensors).map(
-      ([key, { readings, sensor }]) => {
+    const result = Object.entries(sensors).reduce(
+      (prev, [key, { readings, sensor }]) => {
         const mean = calculateMean(readings);
         const sd = calculateStandardDeviation(readings);
         const reference = +references[evaluatedSections.indexOf(sensor)];
@@ -63,6 +63,7 @@ function evaluateLogFile(filePath: string): void {
               tag = 'very precise';
             }
             return {
+              ...prev,
               [key]: tag,
             };
           }
@@ -73,6 +74,7 @@ function evaluateLogFile(filePath: string): void {
               tag = 'discard';
             }
             return {
+              ...prev,
               [key]: tag,
             };
           }
@@ -83,14 +85,16 @@ function evaluateLogFile(filePath: string): void {
               tag = 'discard';
             }
             return {
+              ...prev,
               [key]: tag,
             };
           }
 
           default:
-            return {};
+            return prev;
         }
-      }
+      },
+      {}
     );
     // eslint-disable-next-line no-console
     console.log(result);
